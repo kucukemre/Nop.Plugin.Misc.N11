@@ -1,0 +1,150 @@
+﻿@model Nop.Plugin.Misc.N11.Models.ConfigurationModel
+
+@{
+    Layout = "_ConfigurePlugin";
+}
+
+<form asp-controller="N11" asp-action="Configure" method="post">
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+            @T("Plugins.Misc.N11.Admin.Fields.Title")
+        </h1>
+        <div class="pull-right">
+            <div class="btn-group">
+                <button type="submit" name="exportexcel-categories-all">
+                    <i class="fa fa-file-excel-o"></i>
+                    @T("Plugins.Misc.N11.Admin.Categories.ExportToExcel.All")
+                </button>
+                <button type="submit" name="exportexcel-categoriesattributes-all">
+                    <i class="fa fa-file-excel-o"></i>
+                    @T("Plugins.Misc.N11.Admin.CategoriesAttributes.ExportToExcel.All")
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="form-horizontal">
+            <div class="panel-group">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div>
+                            <p>
+                                Emre Küçük - <a href="mailto:dakikemre@gmail.com" target="_top">dakikemre@gmail.com</a><br />
+                                <a href="https://github.com/kucukemre">GitHub of Emre Küçük</a><br />
+                                <a href="https://github.com/kucukemre/Nop.Plugin.Misc.N11">Nop.Plugin.Misc.N11</a>
+                            </p>
+                            <br />
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="ApiKey" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="ApiKey" />
+                                <span asp-validation-for="ApiKey"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="SecretKey" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="SecretKey" />
+                                <span asp-validation-for="SecretKey"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="ShipmentTemplate" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="ShipmentTemplate" />
+                                <span asp-validation-for="ShipmentTemplate"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="ApprovalStatus" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="ApprovalStatus" />
+                                <span asp-validation-for="ApprovalStatus"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="PreparingDay" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="PreparingDay" />
+                                <span asp-validation-for="PreparingDay"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="CurrencyType" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="CurrencyType" />
+                                <span asp-validation-for="CurrencyType"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="DefaultCategoryId" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="DefaultCategoryId" />
+                                <span asp-validation-for="DefaultCategoryId"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="CategoryIdMapping" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="CategoryIdMapping" />
+                                <span asp-validation-for="CategoryIdMapping"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="DefaultBrandName" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="DefaultBrandName" />
+                                <span asp-validation-for="DefaultBrandName"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="BrandIdMapping" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="BrandIdMapping" />
+                                <span asp-validation-for="BrandIdMapping"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-9 col-md-offset-3">
+                                <input type="submit" name="save" class="btn bg-blue" value="@T("Admin.Common.Save")" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

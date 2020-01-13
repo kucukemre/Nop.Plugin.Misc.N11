@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Misc",
+  "FriendlyName": "N11",
+  "SystemName": "Misc.N11",
+  "Version": "1.00",
+  "SupportedVersions": [ "4.20" ],
+  "Author": "Emre Küçük - dakikemre@gmail.com",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Misc.N11.dll",
+  "Description": "This plugin allows to integrate with N11 Api for nopCommerce v4.20 on .NET Core"
+}
