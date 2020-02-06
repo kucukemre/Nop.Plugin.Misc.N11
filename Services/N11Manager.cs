@@ -34,7 +34,7 @@ namespace Nop.Plugin.Misc.N11.Services
         {
             get
             {
-                int count = 3;
+                int count = 1;
                 return count;
             }
         }
@@ -139,13 +139,29 @@ namespace Nop.Plugin.Misc.N11.Services
             var pageSize = 10000;
             var totalProduct = _productService.GetNumberOfProductsInCategory();
             var pageCount = (totalProduct / pageSize) + 1;
-
+            var storeId = _storeContext.ActiveStoreScopeConfiguration;
             var sw = Stopwatch.StartNew();
+
             for (int index = 0; index < pageCount; index++)
             {
                 try
                 {
-                    GetSaveProductRequestAndBlockingCollection(index, pageSize);
+                    var n11Settings = _settingService.LoadSetting<N11Settings>(storeId);
+
+                    GetSaveProductRequestAndBlockingCollection(index, pageSize, n11Settings);
+
+                    if (!String.IsNullOrEmpty(n11Settings.FailedProductIds))
+                    {
+                        try
+                        {
+                            var productIds = n11Settings.FailedProductIds.Split(";").Where(x => !String.IsNullOrEmpty(x)).ToArray();
+
+                            GetSaveProductRequestAndBlockingCollection(index, pageSize, n11Settings, productIds);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
 
                     Messages.Add((NotifyType.Success, $"Producer index:{index} - Time:{sw.Elapsed.TotalSeconds} s"));
                 }
@@ -166,30 +182,16 @@ namespace Nop.Plugin.Misc.N11.Services
                 {
                     var sw = Stopwatch.StartNew();
 
-                    var lastAddedProductId = 0;
-
+                    var lastItem = item.Last();
                     foreach (var saveProductRequest in item)
                     {
-                        var response = client.SaveProductAsync(saveProductRequest);
+                        var lastAddedProductId = InsertProduct(client, saveProductRequest);
 
-                        if (response.Result.SaveProductResponse.result.status.Contains("success"))
-                        {
-                            Messages.Add((NotifyType.Success, $"N11 ProductImport success"));
-                            lastAddedProductId = int.Parse(saveProductRequest.product.productSellerCode);
-                        }
-                        else
-                            Messages.Add((NotifyType.Error, $"N11 ProductImport error: {response.Result.SaveProductResponse.result.errorMessage}"));
+                        SetLastAddedProductIdSetting(lastAddedProductId);
+
+                        if (!item.Equals(lastItem))
+                            Thread.Sleep(60 * 1000);
                     }
-
-                    var storeId = _storeContext.ActiveStoreScopeConfiguration;
-
-                    var n11Settings = _settingService.LoadSetting<N11Settings>(storeId);
-
-                    n11Settings.LastAddedProductId = lastAddedProductId;
-
-                    _settingService.SaveSetting(n11Settings, settings => settings.LastAddedProductId, clearCache: false);
-
-                    _settingService.ClearCache();
 
                     sw.Stop();
                 }
@@ -200,19 +202,53 @@ namespace Nop.Plugin.Misc.N11.Services
             });
         }
 
-        private void GetSaveProductRequestAndBlockingCollection(int index, int size)
+        private int InsertProduct(ProductServicePortClient client, SaveProductRequest saveProductRequest)
+        {
+            try
+            {
+                var response = client.SaveProductAsync(saveProductRequest);
+
+                if (response.Result.SaveProductResponse.result.status.Contains("success"))
+                {
+                    CheckFailedProductIdsSetting(int.Parse(saveProductRequest.product.productSellerCode));
+                    Messages.Add((NotifyType.Success, $"N11 ProductImport success"));
+                    return int.Parse(saveProductRequest.product.productSellerCode);
+                }
+                else
+                {
+                    SetFailedProductIdsSetting(int.Parse(saveProductRequest.product.productSellerCode));
+                    Messages.Add((NotifyType.Error, $"N11 ProductImport error: {response.Result.SaveProductResponse.result.errorMessage}"));
+                    return 0;
+                }
+            }
+            catch (Exception)
+            {
+                throw new NopException($"GittiGidiyor Product Service Error");
+            }
+        }
+
+        private void GetSaveProductRequestAndBlockingCollection(int index, int size, N11Settings n11Settings, string[] productIds = null)
         {
             try
             {
                 var sw = Stopwatch.StartNew();
 
-                var storeId = _storeContext.ActiveStoreScopeConfiguration;
-                var n11Settings = _settingService.LoadSetting<N11Settings>(storeId);
+                IEnumerable<Nop.Core.Domain.Catalog.Product> products = null;
 
-                var products = _productService.SearchProducts(
+                if (productIds == null)
+                {
+                    products = _productService.SearchProducts(
                     pageIndex: index,
                     pageSize: size
-                ).Where(x => x.Id > n11Settings.LastAddedProductId);
+                    ).Where(x => x.Id > n11Settings.LastAddedProductId);
+                }
+                else
+                {
+                    products = _productService.SearchProducts(
+                    pageIndex: index,
+                    pageSize: size
+                    ).Where(x => productIds.Contains(x.Id.ToString()));
+                }
 
                 if (products.Any())
                 {
@@ -521,6 +557,45 @@ namespace Nop.Plugin.Misc.N11.Services
             }
 
             return categoriesAttributes;
+        }
+
+        private void SetLastAddedProductIdSetting(int lastAddedProductId)
+        {
+            if (lastAddedProductId > 0)
+            {
+                var storeId = _storeContext.ActiveStoreScopeConfiguration;
+                var n11Settings = _settingService.LoadSetting<N11Settings>(storeId);
+                if (lastAddedProductId > n11Settings.LastAddedProductId)
+                {
+                    n11Settings.LastAddedProductId = lastAddedProductId;
+                    _settingService.SaveSetting(n11Settings, settings => settings.LastAddedProductId, clearCache: false);
+                    _settingService.ClearCache();
+                }
+            }
+        }
+
+        private void SetFailedProductIdsSetting(int failedProductId)
+        {
+            if (failedProductId > 0)
+            {
+                var storeId = _storeContext.ActiveStoreScopeConfiguration;
+                var n11Settings = _settingService.LoadSetting<N11Settings>(storeId);
+                n11Settings.FailedProductIds += (failedProductId + ";");
+                _settingService.SaveSetting(n11Settings, settings => settings.LastAddedProductId, clearCache: false);
+                _settingService.ClearCache();
+            }
+        }
+
+        private void CheckFailedProductIdsSetting(int productId)
+        {
+            if (productId > 0)
+            {
+                var storeId = _storeContext.ActiveStoreScopeConfiguration;
+                var n11Settings = _settingService.LoadSetting<N11Settings>(storeId);
+                n11Settings.FailedProductIds = n11Settings.FailedProductIds.Replace(productId + ";", "");
+                _settingService.SaveSetting(n11Settings, settings => settings.FailedProductIds, clearCache: false);
+                _settingService.ClearCache();
+            }
         }
 
         #endregion

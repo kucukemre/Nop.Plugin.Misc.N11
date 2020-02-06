@@ -15,5 +15,6 @@ namespace Nop.Plugin.Misc.N11
         public string DefaultBrandName { get; set; }
         public string BrandIdMapping { get; set; }
         public int LastAddedProductId { get; set; }
+        public string FailedProductIds { get; set; }
     }
 }

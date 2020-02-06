@@ -48,7 +48,8 @@ namespace Nop.Plugin.Misc.N11
                 DefaultCategoryId = 0,
                 BrandIdMapping = "",
                 DefaultBrandName = "",
-                LastAddedProductId = 0
+                LastAddedProductId = 0,
+                FailedProductIds = ""
 
             };
             _settingService.SaveSetting(settings);
